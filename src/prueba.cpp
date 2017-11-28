@@ -29,7 +29,7 @@ class MyApp : public affdex::FaceListener {
 public:
 	MyApp(CameraDetector* det) {
 		this->detector =det;
-		int camId = 10;
+		int camId = 0;
 		int camFPS = 60;
 
 		detector->setCameraId(camId);
@@ -56,12 +56,10 @@ void onFaceFound( float timestamp, FaceId faceId );
 
 int main(int argc, char ** argsv)
 {
-	//affdex::FrameDetector(1);
-	
 	plog::init(plog::debug, "log.txt");
 	LOG(plog::debug) << "Comienza el programa!";
 
-	LOG(plog::debug) << "Se crea el detector de fotos!";
+	LOG(plog::debug) << "Se crea el detector!";
 	CameraDetector detector;
   
 	LOG(plog::debug) << "Se asigna el directorio del clasificador!";
@@ -74,13 +72,24 @@ int main(int argc, char ** argsv)
 	LOG(plog::debug) << "Se configuran los gestos detectables!";
 	detector.setDetectSmile(true);
 	detector.setDetectJoy(true);
+	detector.setDetectAllExpressions(true);
+	detector.setDetectAllEmotions(true);
+	detector.setDetectAllEmojis(true);
+	detector.setDetectAllAppearances(true);	
 	
-	
+	//detector.getDetectSmile();	
+		
 	LOG(plog::debug) << "Se inicia el detector...!";
-	detector.getDetectSmile();	
 	detector.start();
 	
-	//detector->process(frame);
+	string strComando ("");
+	string strFin ("fin");
+	cout << "Ingrese 'fin' para terminar el programa.";
+	while(strComando.compare(strFin)!=0){
+		
+		cin >> strComando;
+		sleep(0);
+	}
 	
 	LOG(plog::debug) << "Se detiene el detector...!";
 	detector.stop();
