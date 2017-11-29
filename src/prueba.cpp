@@ -25,16 +25,17 @@
 using namespace std;
 using namespace affdex;
 
-class MyApp : public affdex::FaceListener {
+class MyApp : public affdex::FaceListener ,  affdex::ImageListener{
 public:
 	MyApp(CameraDetector* det) {
 		this->detector =det;
-		int camId = 0;
+		int camId = 1;
 		int camFPS = 60;
 
 		detector->setCameraId(camId);
 		detector->setCameraFPS(camFPS);		
 		detector->setFaceListener(this);
+		detector->setImageListener(this);
 	}
 
 	void onFaceFound( float timestamp, FaceId faceId ){
@@ -46,6 +47,20 @@ public:
 	void onFaceLost(float timestamp, FaceId faceId){
 		LOG(plog::debug) << "onFaceLost... faceId:" << faceId;
 		std::printf("Face Lost faceId:%d\n", faceId);
+	}
+	
+	void onImageResults(std::map<FaceId, Face> faces, Frame image){
+		LOG(plog::debug) << "onImageResults...:";
+		
+		
+		
+		
+		std::printf("Image Results :\n");	
+	}
+	
+	void onImageCapture(Frame image) {
+		//LOG(plog::debug) << "onImageCapture... ";
+		//std::printf("onImageCapture :\n");
 	}
 
 private:
