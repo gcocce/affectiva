@@ -27,9 +27,9 @@ using namespace affdex;
 
 class MyApp : public affdex::FaceListener ,  affdex::ImageListener{
 public:
-	MyApp(CameraDetector* det) {
+	MyApp(CameraDetector* det, int cameraId) {
 		this->detector =det;
-		int camId = 1;
+		int camId = cameraId;
 		int camFPS = 60;
 
 		detector->setCameraId(camId);
@@ -41,6 +41,7 @@ public:
 	void onFaceFound( float timestamp, FaceId faceId ){
 		LOG(plog::debug) << "onFaceFound... faceId:" << faceId;
 		std::printf("Face Found faceId:%d\n", faceId);
+		mfaceId = faceId;
 		
 	}
 	
@@ -50,10 +51,30 @@ public:
 	}
 	
 	void onImageResults(std::map<FaceId, Face> faces, Frame image){
-		LOG(plog::debug) << "onImageResults...:";
+		LOG(plog::debug) << "onImageResults... faces.size():" << faces.size();
+		std::printf("onImageResults... faces.size():%l\n", faces.size());
 		
+		// Log content:
+		for (std::map<FaceId, Face>::iterator it=faces.begin(); it!=faces.end(); ++it){
+			LOG(plog::debug) << "FaceId: " << it->first << "FaceId: " << "\n";
+			//std::cout << it->first << " => " << it->second << '\n';
+		}
 		
-		
+		if(mfaceId != -1){
+			
+			Face face = faces[mfaceId];
+						
+			LOG(plog::debug) << "onImageCapture... ";
+			
+			std::printf("smile:%f\n", face.expressions.smile);
+			
+			std::printf("mouthopen:%f\n", face.expressions.mouthOpen);
+			
+			//std::printf("sadness:%f\n", face.expressions.sadness);
+			
+			//face.emotions.surprise
+			std::printf("surprise:%f\n", face.emotions.surprise);
+		}
 		
 		std::printf("Image Results :\n");	
 	}
@@ -65,12 +86,22 @@ public:
 
 private:
   CameraDetector* detector;
+  FaceId mfaceId = -1;
 };
 
 void onFaceFound( float timestamp, FaceId faceId );
 
 int main(int argc, char ** argsv)
 {
+	int cameraId=0;
+	
+	cout << "Se inicia el programa con " << argc << " parametros\n";
+	if(argc>1){
+		cameraId=atoi(argsv[1]);
+	}
+	
+	cout << "Id de la camara: " << cameraId << endl;
+	
 	plog::init(plog::debug, "log.txt");
 	LOG(plog::debug) << "Comienza el programa!";
 
@@ -82,7 +113,7 @@ int main(int argc, char ** argsv)
 	detector.setClassifierPath(classifierPath);
 	
 	LOG(plog::debug) << "Se crea el objeto MyApp!";
-	MyApp* myApp = new MyApp(&detector);
+	MyApp* myApp = new MyApp(&detector, cameraId);
 	
 	LOG(plog::debug) << "Se configuran los gestos detectables!";
 	detector.setDetectSmile(true);
@@ -92,17 +123,11 @@ int main(int argc, char ** argsv)
 	detector.setDetectAllEmojis(true);
 	detector.setDetectAllAppearances(true);	
 	
-	//detector.getDetectSmile();	
-		
-	LOG(plog::debug) << "Se inicia el detector...!";
-	detector.start();
 	
-	string strComando ("");
-	string strFin ("fin");
-	cout << "Ingrese 'fin' para terminar el programa.";
-	while(strComando.compare(strFin)!=0){
-		
-		cin >> strComando;
+	cout << "Para terminar el programa use Ctrl+C";
+	LOG(plog::debug) << "Se inicia el detector...!";
+	detector.start();	
+	while(true){
 		sleep(0);
 	}
 	
