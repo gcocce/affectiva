@@ -2,28 +2,49 @@
 #include <memory>
 #include <chrono>
 #include <fstream>
+//#include <string>
+
 #include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 
+// Affectiva
 #include "Frame.h"
 #include "Face.h"
 #include "FrameDetector.h"
 #include "AffdexException.h"
-
 #include "FaceListener.h"
 #include "ProcessStatusListener.h"
-
 #include "PhotoDetector.h"
 #include "CameraDetector.h"
 
+// Log
 #include <plog/Log.h>
 
+// OpenCV
+//#include <opencv2/cvstd.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
 
 
 using namespace std;
+using namespace cv;
 using namespace affdex;
+
+void createAlphaMat(Mat &mat)
+{
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
+            Vec4b& rgba = mat.at<Vec4b>(i, j);
+            rgba[0] = UCHAR_MAX;
+            rgba[1] = saturate_cast<uchar>((float (mat.cols - j)) / ((float)mat.cols) * UCHAR_MAX);
+            rgba[2] = saturate_cast<uchar>((float (mat.rows - i)) / ((float)mat.rows) * UCHAR_MAX);
+            rgba[3] = saturate_cast<uchar>(0.5 * (rgba[1] + rgba[2]));
+        }
+    }
+}
 
 class MyApp : public affdex::FaceListener ,  affdex::ImageListener{
 public:
@@ -51,55 +72,83 @@ public:
 	}
 	
 	void onImageResults(std::map<FaceId, Face> faces, Frame image){
-		LOG(plog::debug) << "onImageResults... faces.size():" << faces.size();
-		std::printf("onImageResults... faces.size():%d\n", faces.size());
 		
-		// Log content:
-		for (std::map<FaceId, Face>::iterator it=faces.begin(); it!=faces.end(); ++it){
-			LOG(plog::debug) << "FaceId: " << it->first << endl;
+		std::printf("onImageResults... \n");
 		
-			Face face=it->second;
+		if (faces.size()>0){
+			LOG(plog::debug) << "onImageResults... faces.size():" << faces.size();
+			std::printf("onImageResults... faces.size():%d\n", faces.size());
 			
-			std::printf("FaceId:%d\n", it->first);
+			// Log content:
+			for (std::map<FaceId, Face>::iterator it=faces.begin(); it!=faces.end(); ++it){
+				LOG(plog::debug) << "FaceId: " << it->first << endl;
 			
-			// Expresiones detectables
-			std::printf("\nExpresiones:\n");
-			std::printf("Sonrisa:%.2f\t", face.expressions.smile);
-			std::printf("SonrisaFalsa:%.2f\t", face.expressions.smirk);
-			std::printf("BocaAbierta:%.2f\t", face.expressions.mouthOpen);
-			std::printf("LabiosApredados:%.2f\n", face.expressions.lipPress);
+				Face face=it->second;
+				
+				std::printf("FaceId:%d\n", it->first);
+				
+				// Expresiones detectables
+				std::printf("\nExpresiones:\n");
+				std::printf("Sonrisa:%.2f\t", face.expressions.smile);
+				std::printf("SonrisaFalsa:%.2f\t", face.expressions.smirk);
+				std::printf("BocaAbierta:%.2f\t", face.expressions.mouthOpen);
+				std::printf("LabiosApredados:%.2f\n", face.expressions.lipPress);
 
-			std::printf("EntreCejasArriba:%.2f\t", face.expressions.innerBrowRaise);
-			std::printf("CejasArriba:%.2f\t", face.expressions.browRaise);
-			std::printf("CejasFruncidas:%.2f\t", face.expressions.browFurrow);
-			std::printf("NarizArrugada:%.2f\n", face.expressions.noseWrinkle);
+				std::printf("EntreCejasArriba:%.2f\t", face.expressions.innerBrowRaise);
+				std::printf("CejasArriba:%.2f\t", face.expressions.browRaise);
+				std::printf("CejasFruncidas:%.2f\t", face.expressions.browFurrow);
+				std::printf("NarizArrugada:%.2f\n", face.expressions.noseWrinkle);
 
-			std::printf("OjosCerrados:%.2f\t", face.expressions.eyeClosure);
-			std::printf("OjosMuyAbierto:%.2f\t", face.expressions.eyeWiden);
-			std::printf("Atenciòn:%.2f\t", face.expressions.attention);			
-			std::printf("MandìbulaCaida:%.2f\n", face.expressions.jawDrop);
-			
-			// Emociones detectables
-			std::printf("\nEmociones:\n");
-			std::printf("Alegrìa:%.2f\t", face.emotions.joy);
-			std::printf("Miedo:%.2f\t", face.emotions.fear);
-			std::printf("Disgusto:%.2f\t", face.emotions.disgust);
-			std::printf("Tristeza:%.2f\t", face.emotions.sadness);
-			
-			std::printf("Enojo:%.2f\n", face.emotions.anger);
-			std::printf("Sorpresa:%.2f\t", face.emotions.surprise);
-			std::printf("Positividad:%.2f\t", face.emotions.valence);
-			std::printf("Desprecio:%.2f\n", face.emotions.contempt);			
-			
-			// Apariencias detectables
-			std::printf("\nApariencia\n");
-			std::printf("Lentes: %d\t", face.appearance.glasses);
-			std::printf("Sexo: %d\t", face.appearance.gender);
-			std::printf("Edad: %d\t", face.appearance.age);
-			std::printf("Etnia: %d\n", face.appearance.ethnicity);
+				std::printf("OjosCerrados:%.2f\t", face.expressions.eyeClosure);
+				std::printf("OjosMuyAbierto:%.2f\t", face.expressions.eyeWiden);
+				std::printf("Atenciòn:%.2f\t", face.expressions.attention);			
+				std::printf("MandìbulaCaida:%.2f\n", face.expressions.jawDrop);
+				
+				// Emociones detectables
+				std::printf("\nEmociones:\n");
+				std::printf("Alegrìa:%.2f\t", face.emotions.joy);
+				std::printf("Miedo:%.2f\t", face.emotions.fear);
+				std::printf("Disgusto:%.2f\t", face.emotions.disgust);
+				std::printf("Tristeza:%.2f\t", face.emotions.sadness);
+				
+				std::printf("Enojo:%.2f\n", face.emotions.anger);
+				std::printf("Sorpresa:%.2f\t", face.emotions.surprise);
+				std::printf("Positividad:%.2f\t", face.emotions.valence);
+				std::printf("Desprecio:%.2f\n", face.emotions.contempt);			
+				
+				// Apariencias detectables
+				std::printf("\nApariencia\n");
+				std::printf("Lentes: %d\t", face.appearance.glasses);
+				std::printf("Sexo: %d\t", face.appearance.gender);
+				std::printf("Edad: %d\t", face.appearance.age);
+				std::printf("Etnia: %d\n", face.appearance.ethnicity);
+
+				
+				Mat mat(480, 640, CV_8UC4);
+				createAlphaMat(mat);
+				
+				cv::Mat* img=image.getImage();
+				cv::String filename;     
+				ostringstream buffer;  
+				buffer << "20171205_" << it->first << ".png";      
+				filename = buffer.str();
+				
+				vector<int> compression_params;
+				compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+				compression_params.push_back(9);
+
+				try {
+					
+					//imwrite("20171205_.png", mat , compression_params);
+				}
+				catch (runtime_error& ex) {
+					fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
+				}
+
+			}
+		
 		}
 		
-		std::printf("Image Results :\n");	
 	}
 	
 	void onImageCapture(Frame image) {
@@ -129,6 +178,7 @@ int main(int argc, char ** argsv)
 	LOG(plog::debug) << "Comienza el programa!";
 
 	LOG(plog::debug) << "Se crea el detector!";
+	cout << "Se crea el detector..." << endl;
 	CameraDetector detector;
   
 	LOG(plog::debug) << "Se asigna el directorio del clasificador!";
@@ -136,6 +186,7 @@ int main(int argc, char ** argsv)
 	detector.setClassifierPath(classifierPath);
 	
 	LOG(plog::debug) << "Se crea el objeto MyApp!";
+	cout << "Se crea el objeto MyApp..." << endl;
 	MyApp* myApp = new MyApp(&detector, cameraId);
 	
 	LOG(plog::debug) << "Se configuran los gestos detectables!";
@@ -145,9 +196,9 @@ int main(int argc, char ** argsv)
 	detector.setDetectAllEmotions(true);
 	detector.setDetectAllEmojis(true);
 	detector.setDetectAllAppearances(true);	
-	
-	
-	cout << "Para terminar el programa use Ctrl+C";
+
+	cout << "Se inicia el detector." << endl;	
+	cout << "Para terminar el programa use Ctrl+C"  << endl;
 	LOG(plog::debug) << "Se inicia el detector...!";
 	detector.start();	
 	while(true){
