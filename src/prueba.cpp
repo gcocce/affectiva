@@ -23,28 +23,13 @@
 #include <plog/Log.h>
 
 // OpenCV
-//#include <opencv2/cvstd.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-
+#include <stdio.h>
+#include <opencv2/core/core.hpp>
+#include <opencv/cv.hpp>
 
 using namespace std;
 using namespace cv;
 using namespace affdex;
-
-void createAlphaMat(Mat &mat)
-{
-    for (int i = 0; i < mat.rows; ++i) {
-        for (int j = 0; j < mat.cols; ++j) {
-            Vec4b& rgba = mat.at<Vec4b>(i, j);
-            rgba[0] = UCHAR_MAX;
-            rgba[1] = saturate_cast<uchar>((float (mat.cols - j)) / ((float)mat.cols) * UCHAR_MAX);
-            rgba[2] = saturate_cast<uchar>((float (mat.rows - i)) / ((float)mat.rows) * UCHAR_MAX);
-            rgba[3] = saturate_cast<uchar>(0.5 * (rgba[1] + rgba[2]));
-        }
-    }
-}
 
 class MyApp : public affdex::FaceListener ,  affdex::ImageListener{
 public:
@@ -123,29 +108,112 @@ public:
 				std::printf("Edad: %d\t", face.appearance.age);
 				std::printf("Etnia: %d\n", face.appearance.ethnicity);
 
+/*
+ * 
+ * /// <summary>
+        /// Get Frame's color format.
+        /// </summary>
+        /// <returns> color format used to create the Frame.</returns>
+        /// <seealso cref="COLOR_FORMAT" />
+        AFFDEXSDK COLOR_FORMAT getColorFormat() const;
+        * 
+        * 
+ *         AFFDEXSDK std::shared_ptr<byte> getBGRByteArray();
+
+        /// <summary>
+        /// Get length of the byte array of pixels.
+        /// </summary>
+        /// <returns>Length of byte array.</returns>
+        AFFDEXSDK int getBGRByteArrayLength() const;
+
+        /// <summary>
+        /// Gets the width.
+        /// </summary>
+        AFFDEXSDK int getWidth() const;
+
+        /// <summary>
+        /// Gets the height.
+        /// </summary>
+        AFFDEXSDK int getHeight() const;
+ * */
 				
-				Mat mat(480, 640, CV_8UC4);
-				createAlphaMat(mat);
+				/* *****************************************************
+				 * Esta seccion guarda un archivo con el 
+				 * contenido devuelto por frame.getBGRByteArray()
+				 * */
+				//std::shared_ptr<byte> shp_data=image.getBGRByteArray();
 				
-				cv::Mat* img=image.getImage();
-				cv::String filename;     
+				std::printf("getBGRByteArrayLength: %d\n", image.getBGRByteArrayLength());
+				std::printf("getWidth: %d\n", image.getWidth());
+				std::printf("getHeight: %d\n", image.getHeight());
+				std::printf("getColorFormat() : %d\n", image.getColorFormat());
+				
+				
+				//string filename;     
+				//ostringstream buffer;  
+				//buffer << "20171212_" << it->first << "_" << detection << ".dat";      
+				//filename = buffer.str();
+				
+				
+				//FILE * fd=fopen(filename.c_str(), "wb");
+				//fwrite(shp_data.get(), image.getBGRByteArrayLength(), 1, fd);
+				//fclose(fd);				
+				
+				// Mat methods ******************************************
+				//bool 	empty () const
+				//size_t 	total () const
+			
+				//cv::Mat *Frame.getImage();
+				//cv:Mat Mat.clone () const
+				//cv::Mat img=pt_img->clone();
+				//cv::InputArray inputArray=img->data()
+
+				/* *****************************************************
+				 * Esta seccion guarda un archivo con el 
+				 * contenido devuelto por frame.getImage()
+				 * 
+				cv::Mat* pt_img=image.getImage();
+				
+				size_t msize;
+				
+				if(pt_img->empty()){
+					std::printf("\nMatrix is empty\n");
+				}else{
+					msize=pt_img->total();
+					std::printf("\nMatrix size: %d\n", msize);
+				}
+				
+
+				
+				string filename;     
 				ostringstream buffer;  
-				buffer << "20171205_" << it->first << ".png";      
+				buffer << "20171212_" << it->first << "_" << detection << ".dat";      
 				filename = buffer.str();
 				
+				FILE * fd=fopen(filename.c_str(), "wb");
+				fwrite(pt_img, msize, 1, fd);
+				fclose(fd);
+				*/
+				
+				/*
 				vector<int> compression_params;
 				compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
 				compression_params.push_back(9);
 
 				try {
+					//cv::imwrite("20171205_.png", img , compression_params);
 					
-					//imwrite("20171205_.png", mat , compression_params);
+					//cv::imwrite("./20171205_.png", gray_image);
 				}
 				catch (runtime_error& ex) {
 					fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
 				}
+				* 
+				* */
 
 			}
+			
+			detection++;
 		
 		}
 		
@@ -159,6 +227,7 @@ public:
 private:
   CameraDetector* detector;
   FaceId mfaceId = -1;
+  long int detection=0;
 };
 
 void onFaceFound( float timestamp, FaceId faceId );
@@ -173,6 +242,19 @@ int main(int argc, char ** argsv)
 	}
 	
 	cout << "Id de la camara: " << cameraId << endl;
+	
+	/*
+	cv::Mat image;
+	image = cv::imread( "foto.jpg", 1 );
+	
+	if(!image.data)
+    {
+      printf("No image data \n");
+      return -1;
+    }
+    	
+	cv::imwrite("./20171205_.png", image);
+	*/
 	
 	plog::init(plog::debug, "log.txt");
 	LOG(plog::debug) << "Comienza el programa!";

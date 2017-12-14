@@ -1,4 +1,4 @@
 echo "g++ src/prueba.cpp -o prueba -std=c++11 -I/home/pi/workspace/affectiva/include -I$HOME/workspace/plog/include/ -L$HOME/workspace/affectiva/lib -l affdex-native"
 echo "..."
-g++ src/prueba.cpp -o prueba -std=c++11 -I/home/pi/workspace/affectiva/include -I$HOME/workspace/plog/include/ -L$HOME/workspace/affectiva/lib -l affdex-native
+g++ src/prueba.cpp -o prueba -std=c++11 -I/usr/local/include/opencv -I/usr/local/include/opencv2 -I/home/pi/workspace/affectiva/include -I$HOME/workspace/plog/include/ -L$HOME/workspace/affectiva/lib -l affdex-native
 echo "LISTO"
