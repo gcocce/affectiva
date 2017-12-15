@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <iostream>
 #include <memory>
 #include <chrono>
@@ -23,7 +24,6 @@
 #include <plog/Log.h>
 
 // OpenCV
-#include <stdio.h>
 #include <opencv2/core/core.hpp>
 #include <opencv/cv.hpp>
 
@@ -58,7 +58,7 @@ public:
 	
 	void onImageResults(std::map<FaceId, Face> faces, Frame image){
 		
-		std::printf("onImageResults... \n");
+		//std::printf("onImageResults... \n");
 		
 		if (faces.size()>0){
 			LOG(plog::debug) << "onImageResults... faces.size():" << faces.size();
@@ -107,71 +107,13 @@ public:
 				std::printf("Sexo: %d\t", face.appearance.gender);
 				std::printf("Edad: %d\t", face.appearance.age);
 				std::printf("Etnia: %d\n", face.appearance.ethnicity);
-
-/*
- * 
- * /// <summary>
-        /// Get Frame's color format.
-        /// </summary>
-        /// <returns> color format used to create the Frame.</returns>
-        /// <seealso cref="COLOR_FORMAT" />
-        AFFDEXSDK COLOR_FORMAT getColorFormat() const;
-        * 
-        * 
- *         AFFDEXSDK std::shared_ptr<byte> getBGRByteArray();
-
-        /// <summary>
-        /// Get length of the byte array of pixels.
-        /// </summary>
-        /// <returns>Length of byte array.</returns>
-        AFFDEXSDK int getBGRByteArrayLength() const;
-
-        /// <summary>
-        /// Gets the width.
-        /// </summary>
-        AFFDEXSDK int getWidth() const;
-
-        /// <summary>
-        /// Gets the height.
-        /// </summary>
-        AFFDEXSDK int getHeight() const;
- * */
-				
-				/* *****************************************************
-				 * Esta seccion guarda un archivo con el 
-				 * contenido devuelto por frame.getBGRByteArray()
-				 * */
-				//std::shared_ptr<byte> shp_data=image.getBGRByteArray();
-				
-				std::printf("getBGRByteArrayLength: %d\n", image.getBGRByteArrayLength());
-				std::printf("getWidth: %d\n", image.getWidth());
-				std::printf("getHeight: %d\n", image.getHeight());
-				std::printf("getColorFormat() : %d\n", image.getColorFormat());
 				
 				
-				//string filename;     
-				//ostringstream buffer;  
-				//buffer << "20171212_" << it->first << "_" << detection << ".dat";      
-				//filename = buffer.str();
 				
-				
-				//FILE * fd=fopen(filename.c_str(), "wb");
-				//fwrite(shp_data.get(), image.getBGRByteArrayLength(), 1, fd);
-				//fclose(fd);				
-				
-				// Mat methods ******************************************
-				//bool 	empty () const
-				//size_t 	total () const
-			
-				//cv::Mat *Frame.getImage();
-				//cv:Mat Mat.clone () const
-				//cv::Mat img=pt_img->clone();
-				//cv::InputArray inputArray=img->data()
-
 				/* *****************************************************
 				 * Esta seccion guarda un archivo con el 
 				 * contenido devuelto por frame.getImage()
-				 * 
+				 * */
 				cv::Mat* pt_img=image.getImage();
 				
 				size_t msize;
@@ -179,11 +121,17 @@ public:
 				if(pt_img->empty()){
 					std::printf("\nMatrix is empty\n");
 				}else{
-					msize=pt_img->total();
-					std::printf("\nMatrix size: %d\n", msize);
+					msize=pt_img->total() * pt_img->channels();
+					std::printf("Matrix total: %d\n", pt_img->total());
+					std::printf("Matrix channels: %d\n", pt_img->channels());
+					std::printf("Matrix elemSize: %d\n", pt_img->elemSize());
+					std::printf("Matrix elemSize1: %d\n", pt_img->elemSize1());
+					std::printf("Matrix depth: %d\n", pt_img->depth());
+					
+					std::printf("Matrix size: %d\n", msize);
+					
+					std::printf("\n");
 				}
-				
-
 				
 				string filename;     
 				ostringstream buffer;  
@@ -191,31 +139,68 @@ public:
 				filename = buffer.str();
 				
 				FILE * fd=fopen(filename.c_str(), "wb");
-				fwrite(pt_img, msize, 1, fd);
-				fclose(fd);
-				*/
+				fwrite(pt_img->data, msize, 1, fd);
+				fclose(fd);				
 				
-				/*
-				vector<int> compression_params;
-				compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-				compression_params.push_back(9);
 
-				try {
-					//cv::imwrite("20171205_.png", img , compression_params);
-					
-					//cv::imwrite("./20171205_.png", gray_image);
-				}
-				catch (runtime_error& ex) {
-					fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
-				}
-				* 
-				* */
-
+				std::printf("Fin extraccion de datos\n");
 			}
+			
+				
+			/*
+			vector<int> compression_params;
+			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+			compression_params.push_back(9);
+
+			try {
+				//cv::imwrite("20171205_.png", img , compression_params);
+				
+				//cv::imwrite("./20171205_.png", gray_image);
+			}
+			catch (runtime_error& ex) {
+				fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
+			}
+			* 
+			* */			
+			
+			/* *****************************************************
+			 * Esta seccion guarda un archivo con el 
+			 * contenido devuelto por frame.getBGRByteArray()
+			 * */
+			//std::shared_ptr<byte> shp_data=image.getBGRByteArray();
+			
+			//std::printf("Se obteiene el array de bytes\n");
+			//AFFDEXSDK std::shared_ptr<byte> shp_data=image.getBGRByteArray();
+			
+			std::printf("getBGRByteArrayLength: %d\n", image.getBGRByteArrayLength());
+			std::printf("getTimestamp() %f\n", image.getTimestamp());
+			std::printf("getWidth: %d\n", image.getWidth());
+			std::printf("getHeight: %d\n", image.getHeight());
+			std::printf("getColorFormat() : %d\n", image.getColorFormat());
+			
+			//shp_data.~shared_ptr();	
+			
+			//delete(shp_data*);
+
+			/*
+			string filename;     
+			ostringstream buffer;  
+			buffer << "20171212_" << it->first << "_" << detection << ".dat";      
+			filename = buffer.str();
+			
+			FILE * fd=fopen(filename.c_str(), "wb");
+			fwrite(shp_data.get(), image.getBGRByteArrayLength(), 1, fd);
+			fclose(fd);
+			
+			shp_data.~shared_ptr();	
+			*/		
+		
+			std::printf("Deteccion %d\n", detection);
 			
 			detection++;
 		
 		}
+		//std::printf("Fin onImageResults\n");
 		
 	}
 	
@@ -226,6 +211,7 @@ public:
 
 private:
   CameraDetector* detector;
+  
   FaceId mfaceId = -1;
   long int detection=0;
 };
