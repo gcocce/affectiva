@@ -2,6 +2,8 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <cstdio>
+#include <ctime>
 #include <fstream>
 //#include <string>
 
@@ -26,6 +28,16 @@
 // OpenCV
 #include <opencv2/core/core.hpp>
 #include <opencv/cv.hpp>
+
+// MYSQL CONNECT
+//#include "mysql_connection.h"
+//#include "mysql_driver.h"
+
+//#include <cppconn/driver.h>
+//#include <cppconn/exception.h>
+//#include <cppconn/resultset.h>
+//#include <cppconn/statement.h>
+//#include <cppconn/prepared_statement.h>
 
 using namespace std;
 using namespace cv;
@@ -105,10 +117,18 @@ public:
 				std::printf("\nApariencia\n");
 				std::printf("Lentes: %d\t", face.appearance.glasses);
 				std::printf("Sexo: %d\t", face.appearance.gender);
-				std::printf("Edad: %d\t", face.appearance.age);
-				std::printf("Etnia: %d\n", face.appearance.ethnicity);
+				std::printf("Etnia: %d\t", face.appearance.ethnicity);	
+				std::printf("Edad: %d 1(<18) 2(18-24) 3(25-34) 4(35-44) 5(45-54) 6(55-64) 7(>64)\n", face.appearance.age);
+
 				
-				
+				/* *****************************************************
+				 * Esta seccion muestra datos relativos a la imagen capturada
+				 * */
+				std::printf("getBGRByteArrayLength: %d\n", image.getBGRByteArrayLength());
+				std::printf("getTimestamp() %f\n", image.getTimestamp());
+				std::printf("getWidth: %d\n", image.getWidth());
+				std::printf("getHeight: %d\n", image.getHeight());
+				std::printf("getColorFormat() : %d\n", image.getColorFormat());				
 				
 				/* *****************************************************
 				 * Esta seccion guarda un archivo con el 
@@ -119,38 +139,48 @@ public:
 				size_t msize;
 				
 				if(pt_img->empty()){
-					std::printf("\nMatrix is empty\n");
+					std::printf("\nMatrix is empty!!!!!!!!!!!!!!!!\n");
 				}else{
-					msize=pt_img->total() * pt_img->channels();
-					std::printf("Matrix total: %d\n", pt_img->total());
+					std::printf("\nMatrix total: %d\n", pt_img->total());
 					std::printf("Matrix channels: %d\n", pt_img->channels());
 					std::printf("Matrix elemSize: %d\n", pt_img->elemSize());
 					std::printf("Matrix elemSize1: %d\n", pt_img->elemSize1());
 					std::printf("Matrix depth: %d\n", pt_img->depth());
 					
+					// El tamano total ocupado es el producto de la cantidad de canales por 
+					// el espacio total ocupado por cada canal
+					msize=pt_img->total() * pt_img->channels();
+					
 					std::printf("Matrix size: %d\n", msize);
 					
 					std::printf("\n");
+					std::time_t rawtime;
+					std::tm* timeinfo;
+					char time_buffer [80];
+
+					std::time(&rawtime);
+					timeinfo = std::localtime(&rawtime);
+
+					std::strftime(time_buffer,80,"%Y-%m-%d-%H-%M-%S",timeinfo);
+					//std::puts(time_buffer);
+					
+					string filename;     
+					ostringstream buffer;  
+					//buffer << "20171212_" << detection << "_" << it->first << ".dat";      
+					buffer << time_buffer << detection << "_" << it->first << ".dat";      
+					filename = buffer.str();
+					
+					FILE * fd=fopen(filename.c_str(), "wb");
+					fwrite(pt_img->data, msize, 1, fd);
+					fclose(fd);		
 				}
 				
-				string filename;     
-				ostringstream buffer;  
-				buffer << "20171212_" << it->first << "_" << detection << ".dat";      
-				filename = buffer.str();
-				
-				FILE * fd=fopen(filename.c_str(), "wb");
-				fwrite(pt_img->data, msize, 1, fd);
-				fclose(fd);				
-				
-
-				std::printf("Fin extraccion de datos\n");
+				std::printf("Fin extraccion de datos de la cara %d\n", it->first);
 			}
 			
 				
-			/*
-			vector<int> compression_params;
-			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-			compression_params.push_back(9);
+			/*Lo siguiente da error al compilar junto con opencv
+			* habria que encontrar la manera de hacerlo
 
 			try {
 				//cv::imwrite("20171205_.png", img , compression_params);
@@ -164,35 +194,19 @@ public:
 			* */			
 			
 			/* *****************************************************
-			 * Esta seccion guarda un archivo con el 
-			 * contenido devuelto por frame.getBGRByteArray()
-			 * */
-			//std::shared_ptr<byte> shp_data=image.getBGRByteArray();
+			 * Esta seccion se intento guardar el archivo con los datos 
+			 * obtenidos de frame.getBGRByteArray() pero el shared pointer
+			 * produjo errores y se descarto.
 			
-			//std::printf("Se obteiene el array de bytes\n");
-			//AFFDEXSDK std::shared_ptr<byte> shp_data=image.getBGRByteArray();
+			std::shared_ptr<byte> shp_data=image.getBGRByteArray();
 			
-			std::printf("getBGRByteArrayLength: %d\n", image.getBGRByteArrayLength());
-			std::printf("getTimestamp() %f\n", image.getTimestamp());
-			std::printf("getWidth: %d\n", image.getWidth());
-			std::printf("getHeight: %d\n", image.getHeight());
-			std::printf("getColorFormat() : %d\n", image.getColorFormat());
-			
-			//shp_data.~shared_ptr();	
-			
-			//delete(shp_data*);
+			shp_data.~shared_ptr();	
+			delete(shp_data*);
 
-			/*
-			string filename;     
-			ostringstream buffer;  
-			buffer << "20171212_" << it->first << "_" << detection << ".dat";      
-			filename = buffer.str();
-			
 			FILE * fd=fopen(filename.c_str(), "wb");
 			fwrite(shp_data.get(), image.getBGRByteArrayLength(), 1, fd);
 			fclose(fd);
 			
-			shp_data.~shared_ptr();	
 			*/		
 		
 			std::printf("Deteccion %d\n", detection);
